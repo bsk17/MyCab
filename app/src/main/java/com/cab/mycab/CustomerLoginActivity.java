@@ -47,7 +47,7 @@ public class CustomerLoginActivity extends AppCompatActivity {
                 // now we will check for the user and continue to other activity
                 if(user != null){
                     Intent intent = new Intent(CustomerLoginActivity.this,
-                            DriverMapActivity.class);
+                            CustomerMapActivity.class);
                     startActivity(intent);
                     finish();
                     return;

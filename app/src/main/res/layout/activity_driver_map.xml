@@ -10,7 +10,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/logout"
-        android:text="LOGOUT" />
+        android:text="LOGOUT"
+        android:layout_marginTop="635dp"
+        android:layout_marginLeft="160dp"
+        android:layout_marginRight="160dp"/>
 
     <fragment
         android:id="@+id/map"
