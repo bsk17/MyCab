@@ -1,6 +1,7 @@
 package com.cab.mycab;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -10,6 +11,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -49,6 +52,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     LocationRequest mLocationRequest;
+    private Button mlogout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +62,22 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        mlogout = findViewById(R.id.logout);
+
+        // function to logout using FireBase
+        mlogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FirebaseAuth.getInstance().signOut();
+                // after sign out we go to MainActivity to elect driver or customer
+                Intent intent = new Intent(DriverMapActivity.this,
+                        MainActivity.class);
+                startActivity(intent);
+                finish();
+                return;
+
+            }
+        });
     }
 
     @Override
@@ -123,21 +143,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             return;
         }
 
-        /*
-        // Create LocationSettingsRequest object using location request
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        builder.addLocationRequest(mLocationRequest);
-        LocationSettingsRequest locationSettingsRequest = builder.build();
-
-        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
-        getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest,
-                new LocationCallback(){
-            @Override
-            public void onLocationResult(LocationResult locationResult){
-                onLocationChanged((Location) locationResult.getLocations());
-            }
-        },Looper.myLooper());
-        */
+        // FuseLocationApi is deprecated so we may have to use FusedApiProviderClient later on
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient,
                 mLocationRequest, this);
     }
