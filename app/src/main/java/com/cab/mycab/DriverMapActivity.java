@@ -13,6 +13,7 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Switch;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -33,8 +34,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.List;
+import java.util.Map;
 
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
@@ -52,7 +59,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     LocationRequest mLocationRequest;
+
     private Button mlogout;
+
+    // this will be th customerId of the request made
+    private String customerId="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +86,79 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 startActivity(intent);
                 finish();
                 return;
+
+            }
+        });
+
+        // as the name suggests for assigning customer to a driver
+        getAssignedCustomer();
+    }
+
+    private void getAssignedCustomer(){
+        String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Riders").child(driverId);
+
+        assignedCustomerRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // this will get activated as soon as there is child created of Riders
+                // dataSnapshot means an element of child
+                if (dataSnapshot.exists()){
+                    Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                    if (map.get("customerRideId") != null){
+                        customerId = map.get("customerRideId").toString();
+                        getAssignedCustomerPickupLocation();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+
+    }
+
+    // this function will get the pickup location of the customer who creates requests by storing
+    // its lat ,log which will be assigned
+    // we will call this function in getAssignedCustomer()
+    private void getAssignedCustomerPickupLocation(){
+        DatabaseReference assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance().getReference()
+                .child("CustomerRequest").child(customerId).child("l");
+
+        assignedCustomerPickupLocationRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()){
+                    // we store in list because in database under a string id double type location
+                    // is stored
+                    List<Object> map =(List<Object>) dataSnapshot.getValue();
+
+                    double locationLat = 0;
+                    double locationLng = 0;
+
+                    if (map.get(0) != null){
+                        locationLat = Double.parseDouble(map.get(0).toString());
+                    }
+                    if (map.get(1) != null){
+                        locationLng = Double.parseDouble(map.get(1).toString());
+                    }
+
+                    // storing the location of driver
+                    LatLng driverLatLng = new LatLng(locationLat, locationLng);
+
+                    // adding our marker to the map
+                    mMap.addMarker(new MarkerOptions()
+                            .position(driverLatLng).title("Pickup Location"));
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
 
             }
         });
@@ -107,21 +191,54 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     @Override
     public void onLocationChanged(Location location) {
-        mLastLocation = location;
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        // to move the camera of maps to the location of user
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+       if (getApplicationContext() != null){
+
+           mLastLocation = location;
+           LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+           // to move the camera of maps to the location of user
+           mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+           mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+
+           // adding the locations of driver to the database by creating DB dynamically
+           String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+           DatabaseReference refAvailable = FirebaseDatabase.getInstance()
+                   .getReference("DriversAvailable");
+           GeoFire geoFireAvailable = new GeoFire(refAvailable);
+
+           DatabaseReference refWorking = FirebaseDatabase.getInstance()
+                   .getReference("DriversWorking");
+           GeoFire geoFireWorking = new GeoFire(refWorking);
 
 
-        // adding the locations of driver to the database by creating DB dynamically
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference ref = FirebaseDatabase.getInstance()
-                .getReference("DriversAvailable");
+           switch (customerId){
+               // if there is no request then no pickup shall be made
+               case "":
+                   // we set the location of available ones and remove the location of working ones
+                   geoFireWorking.removeLocation(userId);
 
-        GeoFire geoFire = new GeoFire(ref);
-        geoFire.setLocation(userId,
-                new GeoLocation(location.getLatitude(), location.getLongitude()));
+                   geoFireAvailable.setLocation(userId,
+                           new GeoLocation(location.getLatitude(), location.getLongitude()));
+                   break;
+
+               default:
+                   // if the above case is not happening then we do the opposite
+                   geoFireAvailable.removeLocation(userId);
+
+                   geoFireWorking.setLocation(userId,
+                           new GeoLocation(location.getLatitude(), location.getLongitude()));
+                   break;
+
+           }
+
+
+
+
+
+
+
+           // updating drivers location for customer
+       }
 
     }
 
