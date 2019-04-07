@@ -54,6 +54,11 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     // variable to store location
     private LatLng pickupLocation;
 
+    // this variable will be used for cancelling request
+    private Boolean requestBol;
+
+    private Marker pickupMarker;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,33 +88,71 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         });
 
         // function to call the cab
+        // also in this function we will be adding the codes to cancel the request
         mRequest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                // we will be removing all the listeners and also remove all the requests associated
+                // from the DB
+                if (requestBol){
+                    requestBol = false;
+                    geoQuery.removeAllListeners();
+                    driverLocationRef.removeEventListener(driverLocationRefListener);
 
-                // this will create a database named as mentioned to store the request
-                // done by the user
-                DatabaseReference ref = FirebaseDatabase.getInstance().
-                        getReference("CustomerRequest");
+                    // to remove from DB
+                    // to remove from the child of driver table which has a customer id
+                    if (driverFoundId != null){
+                        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
+                                .child("Users").child("Riders").child(driverFoundId);
+                        driverRef.setValue(true);
+                        driverFoundId = null;
 
-                // creating new instance of GeoFire for request DB
-                GeoFire geoFire = new GeoFire(ref);
-                geoFire.setLocation(userId,
-                        new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
+                    }
+                    driverFound = false;
+                    radius = 1;
 
-                // we store the location
-                pickupLocation =
-                        new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    DatabaseReference ref = FirebaseDatabase.getInstance().
+                            getReference("CustomerRequest");
+                    GeoFire geoFire = new GeoFire(ref);
+                    geoFire.removeLocation(userId);
 
-                // now we add a marker
-                mMap.addMarker(new MarkerOptions().position(pickupLocation).title("Pickup Here"));
+                    // we remove the marker
+                    if (pickupMarker != null){
+                        pickupMarker.remove();
+                    }
+                    mRequest.setText("Call Cab");
 
-                // after a successful request we change the text of the request button
-                mRequest.setText("Getting Driver...");
+                }else {
+                    requestBol = true;
 
-                // we call the function to get drivers
-                getClosestDriver();
+                    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+                    // this will create a database named as mentioned to store the request
+                    // done by the user
+                    DatabaseReference ref = FirebaseDatabase.getInstance().
+                            getReference("CustomerRequest");
+
+                    // creating new instance of GeoFire for request DB
+                    GeoFire geoFire = new GeoFire(ref);
+                    geoFire.setLocation(userId,
+                            new GeoLocation(mLastLocation.getLatitude(),
+                                    mLastLocation.getLongitude()));
+
+                    // we store the location
+                    pickupLocation =
+                            new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+
+                    // now we add a marker
+                    pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLocation)
+                            .title("Pickup Here"));
+
+                    // after a successful request we change the text of the request button
+                    mRequest.setText("Getting Driver...");
+
+                    // we call the function to get drivers
+                    getClosestDriver();
+                }
             }
         });
     }
@@ -119,6 +162,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private Boolean driverFound = false;
     private String driverFoundId;
 
+    GeoQuery geoQuery;
+
     // create a function to fetch the closest drivers available for a request generated
     public void getClosestDriver(){
         DatabaseReference driverLocation = FirebaseDatabase.getInstance()
@@ -126,7 +171,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         GeoFire geoFire = new GeoFire(driverLocation);
 
         // creating GeoFire Queries to access drivers at 1 km radius from the request location
-        GeoQuery geoQuery = geoFire.
+        geoQuery = geoFire.
                 queryAtLocation(new GeoLocation(pickupLocation.latitude, pickupLocation.longitude),
                         radius);
         geoQuery.removeAllListeners();
@@ -137,7 +182,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             // so we set Boolean value to true
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-                if (!driverFound){
+                if (!driverFound && requestBol){
                     driverFound = true;
                     driverFoundId=key;
 
@@ -186,15 +231,17 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     }
 
     private Marker mDriverMarker;
+    private DatabaseReference driverLocationRef;
+    private ValueEventListener driverLocationRefListener;
     // function to locate the driver for customer
     private void getDriverLocation(){
-        DatabaseReference driverLocationRef = FirebaseDatabase.getInstance().getReference()
+        driverLocationRef = FirebaseDatabase.getInstance().getReference()
                 .child("DriversWorking").child(driverFoundId).child("l");
-        driverLocationRef.addValueEventListener(new ValueEventListener() {
+        driverLocationRefListener = driverLocationRef.addValueEventListener(new ValueEventListener() {
             // every time the location changes this function will be called
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()){
+                if (dataSnapshot.exists() && requestBol){
                     List<Object> map = (List<Object>) dataSnapshot.getValue();
                     double locationLat = 0;
                     double locationLng = 0;
@@ -212,6 +259,29 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     // if there is marker but no driver found just in case
                     if (mDriverMarker != null){
                         mDriverMarker.remove();
+                    }
+
+                    // to show the distance between the driver and customer
+
+                    // this has the location of pickup
+                    Location loc1 = new Location("");
+                    loc1.setLatitude(pickupLocation.latitude);
+                    loc1.setLongitude(pickupLocation.longitude);
+
+                    // this has the location of driver
+                    Location loc2 = new Location("");
+                    loc2.setLatitude(driverLatLng.latitude);
+                    loc2.setLongitude(driverLatLng.longitude);
+
+                    // Location class has a function which gives location between distances
+                    float distanceBetweenLocation = loc1.distanceTo(loc2);
+
+                    // to notify via button when the driver arrives
+                    if (distanceBetweenLocation < 100){
+                        mRequest.setText("Driver's Here");
+                    }else {
+                        mRequest.setText("Driver Found..." +
+                                String.valueOf(distanceBetweenLocation));
                     }
 
                     // adding our marker to the map

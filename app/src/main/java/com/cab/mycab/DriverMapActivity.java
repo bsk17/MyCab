@@ -4,8 +4,6 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -13,26 +11,19 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Switch;
-
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -41,9 +32,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
-import java.util.Map;
-
-import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
 // we are implementing some classes of google api and location to get some functions to update the
 // location every second
@@ -97,7 +85,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private void getAssignedCustomer(){
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference()
-                .child("Users").child("Riders").child(driverId);
+                .child("Users").child("Riders").child(driverId).child("customerRideId");
 
         assignedCustomerRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -105,10 +93,17 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 // this will get activated as soon as there is child created of Riders
                 // dataSnapshot means an element of child
                 if (dataSnapshot.exists()){
-                    Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                    if (map.get("customerRideId") != null){
-                        customerId = map.get("customerRideId").toString();
-                        getAssignedCustomerPickupLocation();
+                    customerId = dataSnapshot.getValue().toString();
+                    getAssignedCustomerPickupLocation();
+                }
+                // driver canceled request notice when driver is removed
+                else {
+                    customerId = "";
+                    if (pickupMarker != null){
+                        pickupMarker.remove();
+                    }
+                    if (assignedCustomerPickupLocationRefListener != null) {
+                        assignedCustomerPickupLocationRef.removeEventListener(assignedCustomerPickupLocationRefListener);
                     }
                 }
             }
@@ -125,14 +120,21 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     // this function will get the pickup location of the customer who creates requests by storing
     // its lat ,log which will be assigned
     // we will call this function in getAssignedCustomer()
+
+    // while removing the request we will remove the listeners and markers
+    Marker pickupMarker;
+    private DatabaseReference assignedCustomerPickupLocationRef;
+    private ValueEventListener assignedCustomerPickupLocationRefListener;
+
     private void getAssignedCustomerPickupLocation(){
-        DatabaseReference assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance().getReference()
+        assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance().getReference()
                 .child("CustomerRequest").child(customerId).child("l");
 
-        assignedCustomerPickupLocationRef.addValueEventListener(new ValueEventListener() {
+        assignedCustomerPickupLocationRefListener = assignedCustomerPickupLocationRef
+                .addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()){
+                if (dataSnapshot.exists() && customerId.equals("")){
                     // we store in list because in database under a string id double type location
                     // is stored
                     List<Object> map =(List<Object>) dataSnapshot.getValue();
@@ -151,7 +153,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     LatLng driverLatLng = new LatLng(locationLat, locationLng);
 
                     // adding our marker to the map
-                    mMap.addMarker(new MarkerOptions()
+                    pickupMarker = mMap.addMarker(new MarkerOptions()
                             .position(driverLatLng).title("Pickup Location"));
                 }
 
