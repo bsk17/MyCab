@@ -147,7 +147,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     // now we add a marker
                     pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLocation)
                             .title("Pickup Here")
-                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_pickup));
+                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_pickup)));
 
                     // after a successful request we change the text of the request button
                     mRequest.setText("Getting Driver...");
@@ -289,7 +289,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     // adding our marker to the map
                     mDriverMarker = mMap.addMarker(new MarkerOptions()
                             .position(driverLatLng).title("Your Driver")
-                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_driver));
+                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_driver)));
                 }
             }
 

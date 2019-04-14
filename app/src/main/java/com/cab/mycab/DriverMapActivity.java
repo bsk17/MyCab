@@ -51,6 +51,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     private Button mlogout;
 
+    private Boolean isLoggingOut = false;
+
     // this will be th customerId of the request made
     private String customerId="";
 
@@ -68,6 +70,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         mlogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // this will be used to call the disconnect driver function at the last
+                isLoggingOut = true;
+                disconnectDriver();
+
                 FirebaseAuth.getInstance().signOut();
                 // after sign out we go to MainActivity to elect driver or customer
                 Intent intent = new Intent(DriverMapActivity.this,
@@ -279,12 +285,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     }
 
-    // to check when the driver is not logged in or not available
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
+    public void disconnectDriver(){
         // when the driver logs out then we remove the location from the database
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference ref = FirebaseDatabase.getInstance()
@@ -292,5 +293,14 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
         GeoFire geoFire = new GeoFire(ref);
         geoFire.removeLocation(userId);
+    }
+
+    // this function will generally get called when the driver logs out
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!isLoggingOut){
+            disconnectDriver();
+        }
     }
 }
