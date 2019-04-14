@@ -21,6 +21,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -154,7 +155,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
                     // adding our marker to the map
                     pickupMarker = mMap.addMarker(new MarkerOptions()
-                            .position(driverLatLng).title("Pickup Location"));
+                            .position(driverLatLng).title("Pickup Location")
+                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_pickup)));
                 }
 
             }
