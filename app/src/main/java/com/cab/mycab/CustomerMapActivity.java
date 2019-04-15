@@ -49,8 +49,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     Location mLastLocation;
     LocationRequest mLocationRequest;
 
-    // the  logout and request button
-    private Button mLogout, mRequest;
+    // the  logout, request and settings button
+    private Button mLogout, mRequest, mSettings;
 
     // variable to store location
     private LatLng pickupLocation;
@@ -70,8 +70,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        // buttons
         mLogout = findViewById(R.id.logout);
         mRequest = findViewById(R.id.request);
+        mSettings = findViewById(R.id.settings);
 
         // function to logout using FireBase
         mLogout.setOnClickListener(new View.OnClickListener() {
@@ -95,7 +97,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             public void onClick(View v) {
                 // we will be removing all the listeners and also remove all the requests associated
                 // from the DB
-                if (requestBol){
+                if (requestBol == true){
                     requestBol = false;
                     geoQuery.removeAllListeners();
                     driverLocationRef.removeEventListener(driverLocationRefListener);
@@ -155,6 +157,16 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     // we call the function to get drivers
                     getClosestDriver();
                 }
+            }
+        });
+
+        mSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(CustomerMapActivity.this,
+                        CustomerSettingsActivity.class);
+                startActivity(intent);
+                return;
             }
         });
     }
