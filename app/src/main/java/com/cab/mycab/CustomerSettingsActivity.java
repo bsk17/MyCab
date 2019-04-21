@@ -1,5 +1,6 @@
 // In this activity we will focus on saving the customer details in the database using the same
 // concepts as in the previous activities.
+// provide storage access to the app
 
 package com.cab.mycab;
 
@@ -168,7 +169,7 @@ public class CustomerSettingsActivity extends AppCompatActivity {
             // we compress the image in JPEg format to save the space in limited storage of FireBase
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             // quality varies from 0-100
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 30, baos);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 10, baos);
             byte[] data = baos.toByteArray();
             UploadTask uploadTask = filePath.putBytes(data);
 
