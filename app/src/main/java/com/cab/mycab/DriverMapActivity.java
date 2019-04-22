@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.firebase.geofire.GeoFire;
@@ -56,7 +57,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     Location mLastLocation;
     LocationRequest mLocationRequest;
 
-    private Button mlogout;
+    SupportMapFragment mapFragment;
+
+    private Button mlogout, mSettings;
 
     private Boolean isLoggingOut = false;
 
@@ -68,20 +71,34 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     private ImageView mCustomerProfileImage;
 
+    // variables to show customer info
     private TextView mCustomerName, mCustomerPhone, mCustomerDestination;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_map);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+
+        // double checking for permission
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(DriverMapActivity.this,
+                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+        }
+        else {
+            mapFragment.getMapAsync(this);
+        }
+
+        mSettings = findViewById(R.id.settings);
         mlogout = findViewById(R.id.logout);
-
         mCustomerInfo = findViewById(R.id.customerInfo);
-
         mCustomerProfileImage = findViewById(R.id.customerProfileImage);
         mCustomerName = findViewById(R.id.customerName);
         mCustomerPhone = findViewById(R.id.customerPhone);
@@ -103,6 +120,18 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 finish();
                 return;
 
+            }
+        });
+
+        // function to manage the driver profile via settings button
+        mSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DriverMapActivity.this,
+                        DriverSettingsActivity.class);
+                startActivity(intent);
+                finish();
+                return;
             }
         });
 
@@ -172,7 +201,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     private void getAssignedCustomerPickupLocation(){
         assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance().getReference()
-                .child("CustomerRequest").child(customerId).child("l");
+                .child("CustomerRequest")
+                .child(customerId)
+                .child("l");
 
         assignedCustomerPickupLocationRefListener = assignedCustomerPickupLocationRef
                 .addValueEventListener(new ValueEventListener() {
@@ -233,7 +264,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
             }
 
             });
@@ -271,6 +301,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             }
         });
     }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -335,11 +366,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                    geoFireWorking.setLocation(userId,
                            new GeoLocation(location.getLatitude(), location.getLongitude()));
                    break;
-
            }
-           // updating drivers location for customer
        }
-
     }
 
     @Override
@@ -352,12 +380,16 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         // to control the usage of battery while updating for location
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
+        // we check for permission
+        // once we call this function then onRequestPermissionResult is called
+        // LOCATION_REQUEST_CODE is the code for the permission which will be used later below
         if (ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            return;
+            ActivityCompat.requestPermissions(DriverMapActivity.this,
+                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
         }
 
         // FuseLocationApi is deprecated so we may have to use FusedApiProviderClient later on
@@ -367,12 +399,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     @Override
     public void onConnectionSuspended(int i) {
-
     }
-
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
     }
 
     public void disconnectDriver(){
@@ -383,6 +412,26 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
         GeoFire geoFire = new GeoFire(ref);
         geoFire.removeLocation(userId);
+    }
+
+    // handling permission intent result
+    final int LOCATION_REQUEST_CODE = 1;
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch(requestCode){
+            case LOCATION_REQUEST_CODE:{
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    mapFragment.getMapAsync(this);
+                }
+                else {
+                    Toast.makeText(getApplicationContext(),
+                            "Please Provide the Location or GPS permission",
+                            Toast.LENGTH_LONG).show();
+                }
+                break;
+            }
+        }
     }
 
     // this function will generally get called when the driver logs out

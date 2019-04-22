@@ -91,9 +91,12 @@ public class DriverLoginActivity extends AppCompatActivity {
 
                                     // DBreference is going to point to the "Riders" table
                                     DatabaseReference current_user_db = FirebaseDatabase
-                                            .getInstance().getReference().child("Users")
-                                            .child("Riders").child(user_id);
-                                    current_user_db.setValue(true);
+                                            .getInstance().getReference()
+                                            .child("Users")
+                                            .child("Riders")
+                                            .child(user_id)
+                                            .child("name");
+                                    current_user_db.setValue(email);
                                 }
                             }
                         });

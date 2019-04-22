@@ -13,6 +13,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
@@ -42,8 +48,9 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-
+// we will show the driver info only after we get the closest driver
 public class CustomerMapActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -53,6 +60,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     LocationRequest mLocationRequest;
+
+    SupportMapFragment mapFragment;
 
     // the  logout, request and settings button
     private Button mLogout, mRequest, mSettings;
@@ -68,20 +77,48 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     // we will use this for place autocomplete api and create DataBase content
     private String destination;
 
+    // variables to show customer info
+    private TextView mDriverName, mDriverPhone, mDriverCar;
+    // these are the variables for our customer profile when the request is received
+    private LinearLayout mDriverInfo;
+
+    private ImageView mDriverImage;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_customer_map);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+
+        // double checking for permissions
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(CustomerMapActivity.this,
+                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+        }
+        else {
+            mapFragment.getMapAsync(this);
+        }
+
 
         // buttons
         mLogout = findViewById(R.id.logout);
         mRequest = findViewById(R.id.request);
         mSettings = findViewById(R.id.settings);
+
+        //variables for driver info
+        mDriverInfo = findViewById(R.id.driverInfo);
+        mDriverImage = findViewById(R.id.driverProfileImage);
+        mDriverName = findViewById(R.id.driverName);
+        mDriverPhone = findViewById(R.id.driverPhone);
+        mDriverCar= findViewById(R.id.driverCar);
 
         // function to logout using FireBase
         mLogout.setOnClickListener(new View.OnClickListener() {
@@ -94,7 +131,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 startActivity(intent);
                 finish();
                 return;
-
             }
         });
 
@@ -114,8 +150,11 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     // to remove from the child of driver table which has a customer id
                     if (driverFoundId != null){
                         DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
-                                .child("Users").child("Riders").child(driverFoundId);
-                        driverRef.setValue(true);
+                                .child("Users")
+                                .child("Riders")
+                                .child(driverFoundId)
+                                .child("");
+                        driverRef.removeValue();
                         driverFoundId = null;
 
                     }
@@ -132,9 +171,21 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     if (pickupMarker != null){
                         pickupMarker.remove();
                     }
+
+                    if (mDriverMarker != null ){
+                        mDriverMarker.remove();
+                    }
+
+                    // we set all the details to null
+                    mDriverInfo.setVisibility(View.GONE);
+                    mDriverName.setText("");
+                    mDriverPhone.setText("");
+                    mDriverImage.setImageResource(R.mipmap.user);
+
                     mRequest.setText("Call Cab");
 
-                }else {
+                }
+                else {
                     requestBol = true;
 
                     String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -178,6 +229,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             }
         });
 
+        // procedure for place automation
+        // we will use the destination variable
         // Initialize the AutocompleteSupportFragment.
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
@@ -207,7 +260,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     // create a function to fetch the closest drivers available for a request generated
     public void getClosestDriver(){
         DatabaseReference driverLocation = FirebaseDatabase.getInstance()
-                .getReference().child("DriversAvailable");
+                .getReference()
+                .child("DriversAvailable");
         GeoFire geoFire = new GeoFire(driverLocation);
 
         // creating GeoFire Queries to access drivers at 1 km radius from the request location
@@ -229,7 +283,9 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     // to inform the driver found that a request is pending we create a child of
                     // Rider table. With this the driver will get to know the customer
                     DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
-                            .child("Users").child("Riders").child(driverFoundId)
+                            .child("Users")
+                            .child("Riders")
+                            .child(driverFoundId)
                             .child("customerRequest");
                     // we put the customerId inside the Rider table
                     String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -240,19 +296,18 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
                     // to show the driver location on Customer Map we create this function
                     getDriverLocation();
+                    //// we will show the driver info only after we get the closest driver
+                    getDriverInfo();
                     mRequest.setText("Locating Driver...");
                 }
-
             }
 
             @Override
             public void onKeyExited(String key) {
-
             }
 
             @Override
             public void onKeyMoved(String key, GeoLocation location) {
-
             }
 
             @Override
@@ -267,7 +322,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
             @Override
             public void onGeoQueryError(DatabaseError error) {
-
             }
         });
     }
@@ -341,6 +395,46 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         });
     }
 
+    // function to show drivers info
+    private void getDriverInfo(){
+        // we need to make the layout visible when we accept request
+        mDriverInfo.setVisibility(View.VISIBLE);
+
+        DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference()
+                .child("Users")
+                .child("Riders")
+                .child(driverFoundId);
+        mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0){
+                    Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                    if (map.get("name")!=null){
+                        mDriverName.setText(map.get("name").toString());
+                    }
+                    if (map.get("phone")!=null){
+                        mDriverPhone.setText(map.get("phone").toString());
+                    }
+                    if (map.get("car")!=null){
+                        mDriverCar.setText(map.get("car").toString());
+                    }
+                    if (map.get("profileImageUrl")!=null){
+                        // using Glide we move the image using url into the ImageView
+                        Glide.with(getApplicationContext())
+                                .load(map.get("profileImageUrl").toString())
+                                .into(mDriverImage);
+                    }
+                }
+            }
+
+            // we wont use this for now
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+    }
+
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -349,7 +443,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            return;
+            ActivityCompat.requestPermissions(CustomerMapActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
         }
         buildGoogleApiClient();
         mMap.setMyLocationEnabled(true);
@@ -373,7 +468,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         // to move the camera of maps to the location of user
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
-
     }
 
     @Override
@@ -391,7 +485,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            return;
+            ActivityCompat.requestPermissions(CustomerMapActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
         }
 
         // FuseLocationApi is deprecated so we may have to use FusedApiProviderClient later on
@@ -409,13 +504,30 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
     }
 
-    // to check when the Customer is not logged in or not available
+    final int LOCATION_REQUEST_CODE = 1;
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch(requestCode){
+            case LOCATION_REQUEST_CODE:{
+                if (grantResults.length > 0 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    mapFragment.getMapAsync(this);
+                }
+                else {
+                    Toast.makeText(getApplicationContext(),
+                            "Please Provide the Location or GPS permission",
+                            Toast.LENGTH_LONG).show();
+                }
+                break;
+            }
+        }
+    }
 
+    // to check when the Customer is not logged in or not available
     @Override
     protected void onStop() {
         super.onStop();
-
-
     }
 }
 
