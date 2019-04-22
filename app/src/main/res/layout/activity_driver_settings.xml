@@ -44,6 +44,38 @@
         android:hint="Your Car"
         android:layout_marginBottom="20sp"/>
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Choose Your Service"/>
+
+    <RadioGroup
+        android:id="@+id/servicesRadioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="8sp">
+
+        <RadioButton
+            android:id="@+id/CabX"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cab X"/>
+
+        <RadioButton
+            android:id="@+id/CabBlack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cab Black"/>
+
+        <RadioButton
+            android:id="@+id/CabXL"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cab XL"/>
+
+    </RadioGroup>
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

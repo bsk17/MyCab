@@ -15,6 +15,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -75,7 +77,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private Marker pickupMarker;
 
     // we will use this for place autocomplete api and create DataBase content
-    private String destination;
+    private String destination, requestService;
 
     // variables to show customer info
     private TextView mDriverName, mDriverPhone, mDriverCar;
@@ -84,7 +86,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
     private ImageView mDriverImage;
 
-
+    private RadioGroup mServicesRadioGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +121,9 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         mDriverName = findViewById(R.id.driverName);
         mDriverPhone = findViewById(R.id.driverPhone);
         mDriverCar= findViewById(R.id.driverCar);
+
+        mServicesRadioGroup = findViewById(R.id.servicesRadioGroup);
+        mServicesRadioGroup.check(R.id.CabX);
 
         // function to logout using FireBase
         mLogout.setOnClickListener(new View.OnClickListener() {
@@ -186,6 +191,13 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
                 }
                 else {
+                    // for each radio button we give an ID
+                    int selectId = mServicesRadioGroup.getCheckedRadioButtonId();
+                    final RadioButton radioButton = findViewById(selectId);
+                    if (radioButton.getText() == null){
+                        return;
+                    }
+                    requestService = radioButton.getText().toString();
                     requestBol = true;
 
                     String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -277,28 +289,49 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
                 if (!driverFound && requestBol){
-                    driverFound = true;
-                    driverFoundId=key;
+                    // to check for service request of customer
+                    DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance()
+                            .getReference().child("Users").child("Riders").child(key);
+                    mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists() && dataSnapshot.getChildrenCount() > 0){
+                                Map<String, Object> driverMap = (Map<String, Object>) dataSnapshot.getValue();
+                                if (driverFound){
+                                    return;
+                                }
+                                // requestService holds the service selected by the user
+                                if (driverMap.get("service").equals(requestService)){
+                                    driverFound = true;
+                                    driverFoundId = dataSnapshot.getKey();
 
-                    // to inform the driver found that a request is pending we create a child of
-                    // Rider table. With this the driver will get to know the customer
-                    DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
-                            .child("Users")
-                            .child("Riders")
-                            .child(driverFoundId)
-                            .child("customerRequest");
-                    // we put the customerId inside the Rider table
-                    String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                    HashMap map = new HashMap();
-                    map.put("customerRideId", customerId);
-                    map.put("destination", destination);
-                    driverRef.updateChildren(map);
+                                    // to inform the driver found that a request is pending we create a child of
+                                    // Rider table. With this the driver will get to know the customer
+                                    DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
+                                            .child("Users")
+                                            .child("Riders")
+                                            .child(driverFoundId)
+                                            .child("customerRequest");
+                                    // we put the customerId inside the Rider table
+                                    String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                                    HashMap map = new HashMap();
+                                    map.put("customerRideId", customerId);
+                                    map.put("destination", destination);
+                                    driverRef.updateChildren(map);
 
-                    // to show the driver location on Customer Map we create this function
-                    getDriverLocation();
-                    //// we will show the driver info only after we get the closest driver
-                    getDriverInfo();
-                    mRequest.setText("Locating Driver...");
+                                    // to show the driver location on Customer Map we create this function
+                                    getDriverLocation();
+                                    //// we will show the driver info only after we get the closest driver
+                                    getDriverInfo();
+                                    mRequest.setText("Locating Driver...");
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                        }
+                    });
                 }
             }
 
