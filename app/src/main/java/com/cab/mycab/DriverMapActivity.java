@@ -18,6 +18,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.directions.route.AbstractRouting;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.Routing;
+import com.directions.route.RoutingListener;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
@@ -32,6 +37,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -39,6 +46,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -47,10 +55,13 @@ import java.util.Map;
 
 // we will be using GeoFire api to save data in Firebase DB
 
+// we are using Routing Listener from github for routing directions
+
 public class DriverMapActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        com.google.android.gms.location.LocationListener {
+        com.google.android.gms.location.LocationListener,
+        RoutingListener {
 
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
@@ -74,10 +85,18 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     // variables to show customer info
     private TextView mCustomerName, mCustomerPhone, mCustomerDestination;
 
+    // variables for route
+    private List<Polyline> polylines;
+    private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_map);
+
+        // initializing polyLines
+        polylines = new ArrayList<>();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -164,12 +183,15 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 }
                 // driver canceled request notice when driver is removed
                 else {
+                    // this function is called when we cancel the request
+                    erasePolylines();
                     customerId = "";
                     if (pickupMarker != null){
                         pickupMarker.remove();
                     }
                     if (assignedCustomerPickupLocationRefListener != null) {
-                        assignedCustomerPickupLocationRef.removeEventListener(assignedCustomerPickupLocationRefListener);
+                        assignedCustomerPickupLocationRef
+                                .removeEventListener(assignedCustomerPickupLocationRefListener);
                     }
 
                     // we set all the details to null
@@ -225,14 +247,16 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     }
 
                     // storing the location of driver
-                    LatLng driverLatLng = new LatLng(locationLat, locationLng);
+                    LatLng pickupLatLng = new LatLng(locationLat, locationLng);
 
                     // adding our marker to the map
                     pickupMarker = mMap.addMarker(new MarkerOptions()
-                            .position(driverLatLng).title("Pickup Location")
+                            .position(pickupLatLng).title("Pickup Location")
                             .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_pickup)));
-                }
 
+                    // creating route
+                    getRouteToMarker(pickupLatLng);
+                }
             }
 
             @Override
@@ -240,6 +264,17 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             }
         });
+    }
+
+    private void getRouteToMarker(LatLng pickupLatLng) {
+        Routing routing = new Routing.Builder()
+                .travelMode(AbstractRouting.TravelMode.DRIVING)
+                .withListener(this)
+                .alternativeRoutes(false)
+                .waypoints(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude())
+                        , pickupLatLng)
+                .build();
+        routing.execute();
     }
 
     private void getAssignedCustomerDestination(){
@@ -417,7 +452,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     // handling permission intent result
     final int LOCATION_REQUEST_CODE = 1;
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions
+            , @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch(requestCode){
             case LOCATION_REQUEST_CODE:{
@@ -441,5 +477,63 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         if (!isLoggingOut){
             disconnectDriver();
         }
+    }
+
+    // these are the implemented functions of RoutingListener Interface
+    // copy and paste the code from github
+    @Override
+    public void onRoutingFailure(RouteException e) {
+        if(e != null) {
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }else {
+            Toast.makeText(this, "Something went wrong, Try again", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRoutingStart() {
+
+    }
+
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
+        if(polylines.size()>0) {
+            for (Polyline poly : polylines) {
+                poly.remove();
+            }
+        }
+
+        polylines = new ArrayList<>();
+        //add route(s) to the map.
+        for (int i = 0; i <route.size(); i++) {
+
+            //In case of more than 5 alternative routes
+            int colorIndex = i % COLORS.length;
+
+            PolylineOptions polyOptions = new PolylineOptions();
+            polyOptions.color(getResources().getColor(COLORS[colorIndex]));
+            polyOptions.width(10 + i * 3);
+            polyOptions.addAll(route.get(i).getPoints());
+            Polyline polyline = mMap.addPolyline(polyOptions);
+            polylines.add(polyline);
+
+            Toast.makeText(getApplicationContext(),
+                    "Route "+ (i+1) +": distance - "+
+                            route.get(i).getDistanceValue()+": duration - "+
+                            route.get(i).getDurationValue()
+                    ,Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+    }
+
+    // to clear the route from the map
+    private void erasePolylines(){
+        for (Polyline line : polylines){
+            line.remove();
+        }
+        polylines.clear();
     }
 }
