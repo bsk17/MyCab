@@ -34,48 +34,63 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/customerInfo"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:layout_gravity="bottom"
         android:background="@android:color/white"
-        android:visibility="gone">
-
-        <ImageView
-            android:layout_width="120sp"
-            android:layout_height="120sp"
-            android:id="@+id/customerProfileImage"
-            android:src="@mipmap/ic_user"
-            android:padding="20sp"/>
-
+        android:visibility="visible">
+        
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20sp">
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/customerDestination"
-                android:paddingBottom="10sp"
-                android:paddingTop="10sp"
-                android:text="Destination --"/>
+            android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/customerName"
-                android:paddingBottom="10sp"
-                android:paddingTop="10sp"/>
 
-            <TextView
+            <ImageView
+                android:layout_width="120sp"
+                android:layout_height="120sp"
+                android:id="@+id/customerProfileImage"
+                android:src="@mipmap/ic_user"
+                android:padding="20sp"/>
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/customerPhone"
-                android:paddingBottom="10sp"
-                android:paddingTop="10sp"/>
+                android:orientation="vertical"
+                android:padding="20sp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/customerDestination"
+                    android:paddingBottom="10sp"
+                    android:paddingTop="10sp"
+                    android:text="Destination --"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/customerName"
+                    android:paddingBottom="10sp"
+                    android:paddingTop="10sp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/customerPhone"
+                    android:paddingBottom="10sp"
+                    android:paddingTop="10sp"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 
+        <Button
+            android:id="@+id/rideStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/holo_blue_dark"
+            android:text="Pick Customer"/>
 
     </LinearLayout>
+
 </FrameLayout>
