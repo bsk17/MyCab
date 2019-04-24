@@ -68,7 +68,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     SupportMapFragment mapFragment;
 
     // the  logout, request and settings button
-    private Button mLogout, mRequest, mSettings;
+    private Button mLogout, mRequest, mSettings, mHistory;
 
     // variable to store location
     private LatLng pickupLocation;
@@ -118,6 +118,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         mLogout = findViewById(R.id.logout);
         mRequest = findViewById(R.id.request);
         mSettings = findViewById(R.id.settings);
+        mHistory = findViewById(R.id.history);
 
         //variables for driver info
         mDriverInfo = findViewById(R.id.driverInfo);
@@ -197,11 +198,23 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             }
         });
 
+        // functions of settings button
         mSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(CustomerMapActivity.this,
                         CustomerSettingsActivity.class);
+                startActivity(intent);
+                return;
+            }
+        });
+
+        // functions of history button
+        mHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(CustomerMapActivity.this,
+                        HistoryActivity.class);
                 startActivity(intent);
                 return;
             }

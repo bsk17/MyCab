@@ -11,7 +11,6 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-
     <application
         android:allowBackup="true"
         android:icon="@drawable/taxiicon"
@@ -19,7 +18,8 @@
         android:roundIcon="@drawable/taxiicon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".DriverSettingsActivity"></activity>
+        <activity android:name=".HistoryActivity"></activity>
+        <activity android:name=".DriverSettingsActivity" />
         <activity android:name=".CustomerSettingsActivity" />
         <activity android:name=".CustomerMapActivity" />
         <!--
