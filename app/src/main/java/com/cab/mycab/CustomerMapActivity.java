@@ -74,12 +74,12 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private LatLng pickupLocation;
 
     // this variable will be used for cancelling request
-    private Boolean requestBol;
+    private Boolean requestBol= false;
 
     private Marker pickupMarker;
 
     // we will use this for place autocomplete api and create DataBase content
-    private String destination, requestService;
+    private String destination = " ", requestService;
 
     // we will use this for storing in database to create route
     private LatLng destinationLatLng;
@@ -227,6 +227,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 getSupportFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
         // Set up a PlaceSelectionListener to handle the response.
+        // this will be used to handle the destination place
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {

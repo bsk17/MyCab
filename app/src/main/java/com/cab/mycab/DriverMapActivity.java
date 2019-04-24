@@ -186,7 +186,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 Intent intent = new Intent(DriverMapActivity.this,
                         DriverSettingsActivity.class);
                 startActivity(intent);
-                finish();
+                //finish();
                 return;
             }
         });
@@ -474,7 +474,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
            // to move the camera of maps to the location of user
            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-           mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+           mMap.animateCamera(CameraUpdateFactory.zoomTo(14));
 
            // adding the locations of driver to the database by creating DB dynamically
            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
