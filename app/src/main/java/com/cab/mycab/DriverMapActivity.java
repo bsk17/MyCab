@@ -76,7 +76,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     // we have get the status of the ride so we create variables for that (status and destination,
     // destinationLatLng)
     private int status = 0;
-    private LatLng destinationLatLng;
+    private LatLng destinationLatLng, pickupLatLng;
 
     private Boolean isLoggingOut = false;
 
@@ -268,7 +268,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     }
 
                     // storing the location of driver
-                    LatLng pickupLatLng = new LatLng(locationLat, locationLng);
+                    pickupLatLng = new LatLng(locationLat, locationLng);
 
                     // adding our marker to the map
                     pickupMarker = mMap.addMarker(new MarkerOptions()
@@ -286,14 +286,14 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         });
     }
 
-    private void getRouteToMarker(LatLng pickupLatLng) {
+    private void getRouteToMarker(LatLng newLatLng) {
         Routing routing = new Routing.Builder()
                 .key("AIzaSyBi964QLDtzaYdsoxxJVLTZ9T5G5B1yOq8")
                 .travelMode(AbstractRouting.TravelMode.DRIVING)
                 .withListener(this)
                 .alternativeRoutes(false)
                 .waypoints(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude())
-                        , pickupLatLng)
+                        , newLatLng)
                 .build();
         routing.execute();
     }
@@ -440,7 +440,13 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         map.put("rating", 0);
         // adding the time
         map.put("timeStamp", getCurrentTimeStamp());
+        map.put("destination", destination);
+        map.put("location/from/lat", pickupLatLng.latitude);
+        map.put("location/from/lng", pickupLatLng.longitude);
+        map.put("location/to/lat", destinationLatLng.latitude);
+        map.put("location/to/lng", destinationLatLng.longitude);
         historyref.child(requestId).updateChildren(map);
+
     }
 
     // function ot get current time
