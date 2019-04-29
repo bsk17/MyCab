@@ -4,7 +4,9 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.format.DateFormat;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,10 +16,15 @@ import com.directions.route.Route;
 import com.directions.route.RouteException;
 import com.directions.route.Routing;
 import com.directions.route.RoutingListener;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -45,6 +52,8 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
 
     private ImageView userImage;
 
+    private RatingBar mRatingBar;
+
     private DatabaseReference historyRideInfoDb;
 
     private LatLng destinationLatLng, pickupLatLng;
@@ -70,6 +79,8 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
         rideDate = findViewById(R.id.rideDate);
         userName = findViewById(R.id.userName);
         userPhone = findViewById(R.id.userPhone);
+
+        mRatingBar = findViewById(R.id.ratingBar);
 
         userImage = findViewById(R.id.userImage);
 
@@ -105,11 +116,18 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                                 userDriverOrCustomer = "Customers";
                                 // to show the user information
                                 getUserInformation("Riders", driverId);
+
+                                // we show the rating bar only in case of the customer
+                                displayCustomerRelatedObject();
                             }
                         }
 
                         if (child.getKey().equals("timestamp")){
                             rideDate.setText(getDate(Long.valueOf(child.getValue().toString())));
+                        }
+
+                        if (child.getKey().equals("rating")){
+                            mRatingBar.setRating(Integer.valueOf(child.getValue().toString()));
                         }
 
                         if (child.getKey().equals("destination")){
@@ -144,6 +162,25 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
 
+            }
+        });
+    }
+
+    // this function is now used to set and display only rating
+    private void displayCustomerRelatedObject() {
+        mRatingBar.setVisibility(View.VISIBLE);
+        mRatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+            @Override
+            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+                historyRideInfoDb.child("rating").setValue(rating);
+
+                // to change the cumulative rating in the driver data
+                DatabaseReference mDriverRatingDb = FirebaseDatabase.getInstance().getReference()
+                        .child("Users")
+                        .child("Riders")
+                        .child(driverId)
+                        .child("rating");
+                mDriverRatingDb.child(rideId).setValue(rating);
             }
         });
     }
@@ -222,6 +259,32 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
 
     @Override
     public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
+
+        // to zoom automatically
+        //This is a builder that is able to create a minimum bound based on a set of LatLng points.
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        // first we set the bounds
+        builder.include(pickupLatLng);
+        builder.include(destinationLatLng);
+        LatLngBounds bounds = builder.build();
+
+        // getting the measure of the screen
+        int width = getResources().getDisplayMetrics().widthPixels;
+        int padding = (int) (width * 0.2);
+
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds,padding);
+        mMap.animateCamera(cameraUpdate);
+
+        // adding the markers
+        mMap.addMarker(new MarkerOptions()
+                .position(pickupLatLng)
+                .title("pickup Location")
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_pickup)));
+        mMap.addMarker(new MarkerOptions()
+                .position(destinationLatLng)
+                .title("destination"));
+
+
         if(polylines.size()>0) {
             for (Polyline poly : polylines) {
                 poly.remove();
