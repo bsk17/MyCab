@@ -42,6 +42,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryViewHolder>  {
     public void onBindViewHolder(HistoryViewHolder holder, int position) {
         // the rideId below is from the ViewHolder Class
         holder.rideId.setText(itemList.get(position).getRideId());
+        holder.time.setText(itemList.get(position).getTime());
     }
 
     @Override

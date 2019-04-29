@@ -282,13 +282,13 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
             }
         });
     }
 
     private void getRouteToMarker(LatLng pickupLatLng) {
         Routing routing = new Routing.Builder()
+                .key("AIzaSyBi964QLDtzaYdsoxxJVLTZ9T5G5B1yOq8")
                 .travelMode(AbstractRouting.TravelMode.DRIVING)
                 .withListener(this)
                 .alternativeRoutes(false)
@@ -438,7 +438,15 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         map.put("driver", userId);
         map.put("customer", customerId);
         map.put("rating", 0);
+        // adding the time
+        map.put("timeStamp", getCurrentTimeStamp());
         historyref.child(requestId).updateChildren(map);
+    }
+
+    // function ot get current time
+    private Long getCurrentTimeStamp() {
+        Long timestamp = System.currentTimeMillis() / 1000;
+        return timestamp;
     }
 
     @Override
