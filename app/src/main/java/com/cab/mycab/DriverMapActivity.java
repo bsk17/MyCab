@@ -12,8 +12,10 @@ import android.os.Bundle;
 import android.support.v4.widget.ImageViewCompat;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -73,6 +75,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     private Button mlogout, mSettings, mRideStatus;
 
+    // we need a switch so that even after we get out of the app until the driver logs out it will
+    // be connected to dDB
+    private Switch mWorkingSwitch;
+
     // we have get the status of the ride so we create variables for that (status and destination,
     // destinationLatLng)
     private int status = 0;
@@ -120,6 +126,20 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         else {
             mapFragment.getMapAsync(this);
         }
+
+        mWorkingSwitch = findViewById(R.id.workingSwitch);
+        // this will be used to identify the status of the switch
+        mWorkingSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked){
+                    connectDriver();
+                }else {
+                    // this will disconnect when the switch is turned off
+                    disconnectDriver();
+                }
+            }
+        });
 
         mSettings = findViewById(R.id.settings);
         mlogout = findViewById(R.id.logout);
@@ -532,6 +552,18 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         // to control the usage of battery while updating for location
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+    }
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    }
+
+    // to connect the driver details to the DB
+    public void connectDriver(){
         // we check for permission
         // once we call this function then onRequestPermissionResult is called
         // LOCATION_REQUEST_CODE is the code for the permission which will be used later below
@@ -549,13 +581,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 mLocationRequest, this);
     }
 
-    @Override
-    public void onConnectionSuspended(int i) {
-    }
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-    }
-
+    // to disconnect the driver details from the DB
     public void disconnectDriver(){
         // when the driver logs out then we remove the location from the database
         LocationServices.FusedLocationApi.
@@ -586,15 +612,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 }
                 break;
             }
-        }
-    }
-
-    // this function will generally get called when the driver logs out
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (!isLoggingOut){
-            disconnectDriver();
         }
     }
 

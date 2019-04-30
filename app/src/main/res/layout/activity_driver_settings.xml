@@ -8,7 +8,8 @@
     android:layout_height="match_parent"
     tools:context=".CustomerSettingsActivity"
     android:orientation="vertical"
-    android:padding="20sp">
+    android:padding="20sp"
+    android:background="@drawable/background_gradient">
 
     <ImageView
         android:id="@+id/profileImage"
@@ -23,6 +24,7 @@
         android:layout_height="wrap_content"
         android:background="@null"
         android:hint="Your Name"
+        android:textColorHint="@color/quantum_white_100"
         android:layout_marginTop="20sp"
         android:layout_marginBottom="20sp"
         android:inputType="text"/>
@@ -33,6 +35,7 @@
         android:layout_height="wrap_content"
         android:background="@null"
         android:hint="Your Phone"
+        android:textColorHint="@color/quantum_white_100"
         android:layout_marginBottom="20sp"
         android:inputType="number"/>
 
@@ -42,12 +45,14 @@
         android:layout_height="wrap_content"
         android:background="@null"
         android:hint="Your Car"
+        android:textColorHint="@color/quantum_white_100"
         android:layout_marginBottom="20sp"/>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Choose Your Service"/>
+        android:text="Choose Your Service"
+        android:textColor="@color/quantum_white_100"/>
 
     <RadioGroup
         android:id="@+id/servicesRadioGroup"
@@ -60,19 +65,22 @@
             android:id="@+id/CabX"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Cab X"/>
+            android:text="Cab X"
+            android:textColor="@color/quantum_white_100"/>
 
         <RadioButton
             android:id="@+id/CabBlack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Cab Black"/>
+            android:text="Cab Black"
+            android:textColor="@color/quantum_white_100"/>
 
         <RadioButton
             android:id="@+id/CabXL"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Cab XL"/>
+            android:text="Cab XL"
+            android:textColor="@color/quantum_white_100"/>
 
     </RadioGroup>
 
@@ -85,6 +93,8 @@
         android:layout_margin="16sp">
 
         <Button
+            android:background="@drawable/button_background"
+            android:textColor="#360033"
             android:id="@+id/confirm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -92,6 +102,8 @@
             android:fontFamily="@string/common_google_play_services_enable_button"/>
 
         <Button
+            android:background="@drawable/button_background"
+            android:textColor="#360033"
             android:id="@+id/back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

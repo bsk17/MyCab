@@ -6,37 +6,64 @@
     android:layout_width="match_parent"
     tools:context=".DriverMapActivity">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/logout"
-        android:text="LOGOUT"
-        android:layout_margin="8sp"
-       />
-
-    <Button
-        android:layout_gravity="end"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/settings"
-        android:text="SETTINGS"
-        android:layout_margin="8sp"
-        />
-
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
 
         android:layout_height="match_parent"
         android:layout_width="match_parent"/>
+    
+    <LinearLayout
+        android:background="@drawable/background_gradient"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:background="@drawable/button_background"
+                android:textColor="#360033"
+                android:layout_weight="1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/logout"
+                android:text="LOGOUT"
+                android:layout_margin="8sp" />
+
+            <Button
+                android:background="@drawable/button_background"
+                android:textColor="#360033"
+                android:layout_weight="1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/settings"
+                android:text="SETTINGS"
+                android:layout_margin="8sp" />
+
+        </LinearLayout>
+        <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="working"
+            android:textColor="@color/quantum_white_100"
+            android:layout_margin="10sp"
+            android:id="@+id/workingSwitch"/>
+
+    </LinearLayout>
+
 
     <LinearLayout
+
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/customerInfo"
         android:orientation="vertical"
         android:layout_gravity="bottom"
-        android:background="@android:color/white"
+        android:background="@drawable/background_gradient"
         android:visibility="visible">
         
         <LinearLayout
@@ -62,6 +89,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/customerDestination"
+                    android:textColor="@color/quantum_white_100"
                     android:paddingBottom="10sp"
                     android:paddingTop="10sp"
                     android:text="Destination --"/>
@@ -70,6 +98,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/customerName"
+                    android:textColor="@color/quantum_white_100"
                     android:paddingBottom="10sp"
                     android:paddingTop="10sp"/>
 
@@ -78,6 +107,7 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/customerPhone"
                     android:paddingBottom="10sp"
+                    android:textColor="@color/quantum_white_100"
                     android:paddingTop="10sp"/>
 
             </LinearLayout>
@@ -88,7 +118,8 @@
             android:id="@+id/rideStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/holo_blue_dark"
+            android:background="@drawable/button_background"
+            android:textColor="#360033"
             android:text="Pick Customer"/>
 
     </LinearLayout>

@@ -18,6 +18,7 @@
         android:roundIcon="@drawable/taxiicon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <service android:name=".onAppKilled" android:stopWithTask="false"/>
         <activity android:name=".HistorySingleActivity"></activity>
         <activity android:name=".HistoryActivity" />
         <activity android:name=".DriverSettingsActivity" />
@@ -41,12 +42,15 @@
         <activity android:name=".CustomerLoginActivity" />
         <activity android:name=".DriverLoginActivity" />
         <activity android:name=".MainActivity">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
+
     </application>
 
 </manifest>

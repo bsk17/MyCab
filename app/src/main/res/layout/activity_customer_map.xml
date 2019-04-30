@@ -7,9 +7,6 @@
     tools:context=".CustomerMapActivity">
 
 
-
-
-
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -24,30 +21,36 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/buttons">
+            android:id="@+id/buttons"
+            android:background="@drawable/background_gradient">
 
             <Button
+                android:background="@drawable/button_background"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:id="@+id/logout"
                 android:text="LOGOUT"
+                android:textColor="#360033"
                 android:width="0dp"
                 android:layout_weight="1"
                 android:layout_margin="4sp"/>
 
             <Button
+                android:background="@drawable/button_background"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:id="@+id/history"
                 android:text="HISTORY"
+                android:textColor="#360033"
                 android:layout_weight="1"
                 android:layout_margin="4sp"/>
 
             <Button
+                android:background="@drawable/button_background"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:id="@+id/settings"
-
+                android:textColor="#360033"
                 android:layout_weight="1"
                 android:text="SETTINGS"
                 android:layout_margin="4sp"/>
@@ -124,7 +127,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:background="@android:color/holo_orange_light"
+            android:background="@drawable/background_gradient"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -142,17 +145,20 @@
                     android:layout_margin="5sp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Cab X"/>
+                    android:text="Cab X"
+                    android:textColor="@color/quantum_white_100"/>
 
                 <RadioButton
                     android:id="@+id/CabBlack"
                     android:layout_margin="5sp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Cab Black"/>
+                    android:text="Cab Black"
+                    android:textColor="@color/quantum_white_100"/>
 
                 <RadioButton
                     android:id="@+id/CabXL"
+                    android:textColor="@color/quantum_white_100"
                     android:layout_margin="5sp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -165,7 +171,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Call Cab"
-                android:layout_margin="8sp"
+                android:background="@drawable/button_background"
+                android:layout_marginTop="8sp"
+                android:layout_marginLeft="128dp"
+                android:layout_marginRight="128dp"
+                android:layout_marginBottom="8dp"
+                android:textColor="#360033"
                 android:layout_gravity="bottom"/>
 
         </LinearLayout>

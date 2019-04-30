@@ -20,6 +20,9 @@ public class MainActivity extends AppCompatActivity {
         mDriver = findViewById(R.id.driver);
         mCustomer = findViewById(R.id.customer);
 
+        //we call the onAppKilled
+        startService(new Intent(MainActivity.this, onAppKilled.class));
+
         // setting on click listeners for each button
 
         // this button will take you to Login page for Driver

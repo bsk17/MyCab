@@ -5,15 +5,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".DriverLoginActivity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@drawable/background_gradient">
+
+    <ImageView
+        android:layout_marginTop="256dp"
+        android:layout_gravity="center"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@mipmap/ic_driver" />
 
     <EditText
         android:id="@+id/driver_email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="e-mail"
-        android:layout_marginTop="324dp"
-        android:layout_marginLeft="16dp"
+        android:layout_marginTop="8dp"
+        android:textColorHint="@color/quantum_white_100"        android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"/>
 
     <EditText
@@ -21,6 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="password"
+        android:textColorHint="@color/quantum_white_100"
         android:layout_margin="16dp"/>
 
     <Button
@@ -28,13 +37,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="LOGIN"
-        android:layout_margin="32dp"/>
+        android:textColor="#360033"
+        android:layout_marginTop="32dp"
+        android:layout_marginLeft="128dp"
+        android:layout_marginRight="128dp"
+        android:background="@drawable/button_background"/>
     <Button
         android:id="@+id/driver_register"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Register"
-        android:layout_marginLeft="32dp"
-        android:layout_marginRight="32dp"/>
+        android:textColor="#360033"
+        android:background="@drawable/button_background"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="128dp"
+        android:layout_marginRight="128dp"/>
 
 </LinearLayout>
