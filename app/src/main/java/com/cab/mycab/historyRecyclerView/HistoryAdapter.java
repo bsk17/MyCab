@@ -1,5 +1,6 @@
 package com.cab.mycab.historyRecyclerView;
 
+import android.app.LauncherActivity;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -26,27 +27,28 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryViewHolder>  {
 
         // we specify the layout file file for the recycler view
         View layoutView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_history, null, false);
+                .inflate(R.layout.item_history, parent, false);
 
         // we set the layout height and width
         RecyclerView.LayoutParams lp =
                 new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT);
         layoutView.setLayoutParams(lp);
-        HistoryViewHolder rcv = new HistoryViewHolder(layoutView);
 
+        HistoryViewHolder rcv = new HistoryViewHolder(layoutView);
         return rcv;
     }
 
     @Override
     public void onBindViewHolder(HistoryViewHolder holder, int position) {
         // the rideId below is from the ViewHolder Class
-        holder.rideId.setText(itemList.get(position).getRideId());
-        holder.time.setText(itemList.get(position).getTime());
+        HistoryObject listItem = itemList.get(position);
+        holder.rideId.setText(listItem.getRideId());
+        holder.time.setText(listItem.getTime());
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return itemList.size();
     }
 }

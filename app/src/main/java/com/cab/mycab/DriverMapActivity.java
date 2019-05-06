@@ -160,12 +160,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     case 1:
                         status = 2;
                         erasePolylines();
-
                         // create a new route to destination
                         if(destinationLatLng.latitude != 0.0 && destinationLatLng.longitude != 0.0){
                             getRouteToMarker(destinationLatLng);
                         }
-
                         //by clicking this the driver can end the ride
                         mRideStatus.setText("Drive Complete");
                         break;
@@ -434,7 +432,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     // function to record the history of driver
     // we will create another table in DB
     private void recordRide(){
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String  userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
                 .child("Users")
@@ -443,7 +441,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 .child("history");
         DatabaseReference customerRef = FirebaseDatabase.getInstance().getReference()
                 .child("Users")
-                .child("Customer")
+                .child("Customers")
                 .child(customerId)
                 .child("history");
         DatabaseReference historyref = FirebaseDatabase.getInstance().getReference()

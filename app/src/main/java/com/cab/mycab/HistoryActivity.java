@@ -31,9 +31,6 @@ public class HistoryActivity extends AppCompatActivity {
     private RecyclerView.Adapter mHistoryAdapter;
     private RecyclerView.LayoutManager mHistoryLayoutManager;
     private ArrayList resultsHistory = new ArrayList<HistoryObject>();
-    private ArrayList<HistoryObject> getDataSetHistory(){
-        return resultsHistory;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +45,7 @@ public class HistoryActivity extends AppCompatActivity {
         mHistoryLayoutManager = new LinearLayoutManager(HistoryActivity.this);
         mHistoryRecyclerView.setLayoutManager(mHistoryLayoutManager);
 
-        // we have to pass a list and a context fro adapter constructor
+        // we have to pass a list and a context for adapter constructor
         mHistoryAdapter = new HistoryAdapter(getDataSetHistory(), HistoryActivity.this);
         mHistoryRecyclerView.setAdapter(mHistoryAdapter);
 
@@ -59,7 +56,6 @@ public class HistoryActivity extends AppCompatActivity {
         getUserHistoryIds();
 
     }
-
     // this function will receive the data from DB and place it in the list
     private void getUserHistoryIds() {
         DatabaseReference userHistoryDatabase = FirebaseDatabase.getInstance().getReference()
@@ -80,10 +76,10 @@ public class HistoryActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
             }
         });
     }
+
 
     private void FetchRideInformation(String rideKey) {
         DatabaseReference historyDatabase = FirebaseDatabase.getInstance().getReference()
@@ -121,6 +117,7 @@ public class HistoryActivity extends AppCompatActivity {
         String date = DateFormat.format("dd-MM-yyyy hh:mm", cal).toString();
         return date;
     }
-
-
+    private ArrayList<HistoryObject> getDataSetHistory(){
+        return resultsHistory;
+    }
 }
